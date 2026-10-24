@@ -1,0 +1,52 @@
+server:
+  port: 8082
+  forward-headers-strategy: native
+
+spring:
+  application:
+    name: patient-service
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/patient}
+    username: ${DB_USER:hms}
+    password: ${DB_PASSWORD:hms}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: true
+  cache:
+    cache-names: patientResource
+    caffeine:
+      spec: maximumSize=10000,expireAfterWrite=30s
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${JWT_ISSUER_URI:http://localhost:8180/realms/hms}
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+    consumer:
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+
+hms:
+  crypto:
+    # 32-byte Base64 key. DEV ONLY default; inject from KMS / Secrets Manager in real environments.
+    key: ${HMS_CRYPTO_KEY:MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=}
+  security:
+    break-glass-enabled: ${BREAK_GLASS_ENABLED:false}
+    trusted-cidrs: ${TRUSTED_CIDRS:10.0.0.0/8,127.0.0.1/32,::1/128}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true

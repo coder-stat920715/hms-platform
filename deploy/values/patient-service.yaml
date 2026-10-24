@@ -1,0 +1,21 @@
+# deploy/values/patient-service.yaml
+image: { repository: 123456789012.dkr.ecr.eu-west-1.amazonaws.com/hms/patient-service }
+env:
+  SPRING_PROFILES_ACTIVE: prod,msk-iam
+  SPRING_DATASOURCE_URL: jdbc:postgresql://hms-patient.cluster-xyz.eu-west-1.rds.amazonaws.com:5432/patient?sslmode=verify-full
+  SPRING_KAFKA_BOOTSTRAP_SERVERS: b-1.hms.kafka.eu-west-1.amazonaws.com:9098
+  SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://auth.hms.example.com/realms/hms
+  BREAK_GLASS_ENABLED: "false"
+  TRUSTED_CIDRS: 10.20.0.0/16
+externalSecret:
+  keys:
+    - { secretKey: SPRING_DATASOURCE_USERNAME, remoteRef: hms/patient/db, property: username }
+    - { secretKey: SPRING_DATASOURCE_PASSWORD, remoteRef: hms/patient/db, property: password }
+    - { secretKey: HMS_CRYPTO_KEY, remoteRef: hms/patient/crypto, property: key }
+serviceAccount:
+  roleArn: arn:aws:iam::123456789012:role/hms-patient-service   # IRSA: kafka-cluster:* on the topics this service uses
+targetGroup:
+  arn: arn:aws:elasticloadbalancing:eu-west-1:123456789012:targetgroup/hms-patient/abc123
+network:
+  allowFrom: [api-gateway]
+  egressToDataCidrs: [10.20.20.0/22]

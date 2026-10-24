@@ -1,0 +1,18 @@
+# deploy/values/pharmacy-inventory-service.yaml
+image: { repository: 123456789012.dkr.ecr.eu-west-1.amazonaws.com/hms/pharmacy-inventory-service }
+env:
+  SPRING_PROFILES_ACTIVE: prod,msk-iam
+  SPRING_DATASOURCE_URL: jdbc:postgresql://hms-pharmacy.cluster-xyz.eu-west-1.rds.amazonaws.com:5432/pharmacy?sslmode=verify-full
+  SPRING_KAFKA_BOOTSTRAP_SERVERS: b-1.hms.kafka.eu-west-1.amazonaws.com:9098
+  SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://auth.hms.example.com/realms/hms
+externalSecret:
+  keys:
+    - { secretKey: SPRING_DATASOURCE_USERNAME, remoteRef: hms/pharmacy/db, property: username }
+    - { secretKey: SPRING_DATASOURCE_PASSWORD, remoteRef: hms/pharmacy/db, property: password }
+serviceAccount:
+  roleArn: arn:aws:iam::123456789012:role/hms-pharmacy-inventory-service   # IRSA: kafka-cluster:* on the topics this service uses
+targetGroup:
+  arn: arn:aws:elasticloadbalancing:eu-west-1:123456789012:targetgroup/hms-pharmacy/abc123
+network:
+  allowFrom: [api-gateway]
+  egressToDataCidrs: [10.20.20.0/22]

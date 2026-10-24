@@ -1,0 +1,95 @@
+# deploy/k8s/kafka-connect.yaml
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaConnect
+metadata:
+  name: hms-connect
+  namespace: hms
+  annotations: { strimzi.io/use-connector-resources: "true" }
+spec:
+  version: 3.8.0
+  replicas: 2
+  template:
+    serviceAccount:
+      metadata:
+        annotations:
+          eks.amazonaws.com/role-arn: arn:aws:iam::123456789012:role/hms-kafka-connect   # IRSA: kafka-cluster:* on hms.*.events
+  bootstrapServers: b-1.hms.kafka.eu-west-1.amazonaws.com:9098
+  tls: { trustedCertificates: [] }                 # MSK uses public ACM certs
+  config:
+    group.id: hms-connect
+    offset.storage.topic: connect-offsets
+    config.storage.topic: connect-configs
+    status.storage.topic: connect-status
+    config.storage.replication.factor: 3
+    offset.storage.replication.factor: 3
+    status.storage.replication.factor: 3
+    config.providers: secrets
+    config.providers.secrets.class: io.strimzi.kafka.KubernetesSecretConfigProvider
+    # MSK IAM authentication (worker, producer, consumer, admin all need it)
+    security.protocol: SASL_SSL
+    sasl.mechanism: AWS_MSK_IAM
+    sasl.jaas.config: software.amazon.msk.auth.iam.IAMLoginModule required;
+    sasl.client.callback.handler.class: software.amazon.msk.auth.iam.IAMClientCallbackHandler
+    producer.security.protocol: SASL_SSL
+    producer.sasl.mechanism: AWS_MSK_IAM
+    producer.sasl.jaas.config: software.amazon.msk.auth.iam.IAMLoginModule required;
+    producer.sasl.client.callback.handler.class: software.amazon.msk.auth.iam.IAMClientCallbackHandler
+    consumer.security.protocol: SASL_SSL
+    consumer.sasl.mechanism: AWS_MSK_IAM
+    consumer.sasl.jaas.config: software.amazon.msk.auth.iam.IAMLoginModule required;
+    consumer.sasl.client.callback.handler.class: software.amazon.msk.auth.iam.IAMClientCallbackHandler
+    admin.security.protocol: SASL_SSL
+    admin.sasl.mechanism: AWS_MSK_IAM
+    admin.sasl.jaas.config: software.amazon.msk.auth.iam.IAMLoginModule required;
+    admin.sasl.client.callback.handler.class: software.amazon.msk.auth.iam.IAMClientCallbackHandler
+  build:
+    output:
+      type: docker
+      image: 123456789012.dkr.ecr.eu-west-1.amazonaws.com/hms/connect-debezium:2.7
+    plugins:
+      - name: debezium-postgres
+        artifacts:
+          - type: maven
+            group: io.debezium
+            artifact: debezium-connector-postgres
+            version: 2.7.3.Final
+      - name: msk-iam-auth
+        artifacts:
+          - type: maven
+            group: software.amazon.msk
+            artifact: aws-msk-iam-auth
+            version: 2.2.0
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaConnector
+metadata:
+  name: appointment-outbox
+  namespace: hms
+  labels: { strimzi.io/cluster: hms-connect }
+spec:
+  class: io.debezium.connector.postgresql.PostgresConnector
+  tasksMax: 1
+  config:
+    database.hostname: appointments.cluster-xyz.eu-west-1.rds.amazonaws.com
+    database.port: 5432
+    database.user: ${secrets:hms/debezium-appointment:username}
+    database.password: ${secrets:hms/debezium-appointment:password}
+    database.dbname: appointments
+    topic.prefix: appointment-db
+    plugin.name: pgoutput
+    publication.name: dbz_outbox
+    slot.name: appointment_outbox_slot
+    table.include.list: public.outbox
+    heartbeat.interval.ms: 10000
+    transforms: outbox
+    transforms.outbox.type: io.debezium.transforms.outbox.EventRouter
+    transforms.outbox.table.field.event.key: aggregateid
+    transforms.outbox.table.field.event.type: type
+    transforms.outbox.table.field.event.payload: payload
+    transforms.outbox.route.by.field: aggregatetype
+    transforms.outbox.route.topic.replacement: "hms.${routedByValue}.events"
+    transforms.outbox.table.expand.json.payload: true
+    transforms.outbox.table.fields.additional.placement: "type:header:eventType,id:header:messageId"
+    key.converter: org.apache.kafka.connect.storage.StringConverter
+    value.converter: org.apache.kafka.connect.json.JsonConverter
+    value.converter.schemas.enable: false

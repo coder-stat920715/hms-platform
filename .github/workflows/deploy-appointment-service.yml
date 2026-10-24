@@ -1,0 +1,22 @@
+name: deploy-appointment-service
+on: { push: { branches: [main], paths: ["appointment-service/**", "hms-common/**"] } }
+permissions: { id-token: write, contents: read }
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: 21, cache: maven }
+      - run: mvn -pl appointment-service -am verify          # unit + Testcontainers tests
+      - uses: aws-actions/configure-aws-credentials@v4
+        with: { role-to-assume: arn:aws:iam::123456789012:role/gha-deploy, aws-region: eu-west-1 }
+      - uses: aws-actions/amazon-ecr-login@v2
+      - run: |
+          mvn -pl appointment-service spring-boot:build-image \
+            -Dspring-boot.build-image.imageName=$ECR/hms/appointment-service:${{ github.sha }}
+          docker push $ECR/hms/appointment-service:${{ github.sha }}
+      - run: |
+          aws eks update-kubeconfig --name hms
+          helm upgrade --install appointment-service deploy/charts/hms-service -n hms \
+            -f deploy/values/appointment-service.yaml --set image.tag=${{ github.sha }} --atomic --timeout 5m

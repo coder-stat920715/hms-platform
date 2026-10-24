@@ -1,0 +1,309 @@
+{
+  "realm": "hms",
+  "enabled": true,
+  "sslRequired": "none",
+  "bruteForceProtected": true,
+  "accessTokenLifespan": 300,
+  "roles": {
+    "realm": [
+      {
+        "name": "admin"
+      },
+      {
+        "name": "doctor"
+      },
+      {
+        "name": "patient"
+      },
+      {
+        "name": "nurse"
+      },
+      {
+        "name": "receptionist"
+      },
+      {
+        "name": "billing_clerk"
+      },
+      {
+        "name": "pharmacist"
+      }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "hms-web",
+      "enabled": true,
+      "publicClient": true,
+      "directAccessGrantsEnabled": true,
+      "standardFlowEnabled": true,
+      "redirectUris": [
+        "*"
+      ],
+      "webOrigins": [
+        "*"
+      ],
+      "protocolMappers": [
+        {
+          "name": "realm-roles",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-realm-role-mapper",
+          "config": {
+            "claim.name": "realm_access.roles",
+            "multivalued": "true",
+            "jsonType.label": "String",
+            "access.token.claim": "true",
+            "id.token.claim": "false",
+            "userinfo.token.claim": "false"
+          }
+        },
+        {
+          "name": "department",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "config": {
+            "user.attribute": "department",
+            "claim.name": "department",
+            "jsonType.label": "String",
+            "access.token.claim": "true",
+            "id.token.claim": "false",
+            "userinfo.token.claim": "false"
+          }
+        },
+        {
+          "name": "shift_start",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "config": {
+            "user.attribute": "shift_start",
+            "claim.name": "shift_start",
+            "jsonType.label": "String",
+            "access.token.claim": "true",
+            "id.token.claim": "false",
+            "userinfo.token.claim": "false"
+          }
+        },
+        {
+          "name": "shift_end",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "config": {
+            "user.attribute": "shift_end",
+            "claim.name": "shift_end",
+            "jsonType.label": "String",
+            "access.token.claim": "true",
+            "id.token.claim": "false",
+            "userinfo.token.claim": "false"
+          }
+        }
+      ]
+    }
+  ],
+  "users": [
+    {
+      "username": "admin1",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "admin1@hms.example.com",
+      "firstName": "Admin1",
+      "lastName": "Dev",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "admin1",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "admin"
+      ],
+      "attributes": {
+        "department": [
+          "admin"
+        ],
+        "shift_start": [
+          "00:00"
+        ],
+        "shift_end": [
+          "23:59"
+        ]
+      }
+    },
+    {
+      "username": "doctor1",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "doctor1@hms.example.com",
+      "firstName": "Doctor1",
+      "lastName": "Dev",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "doctor1",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "doctor"
+      ],
+      "attributes": {
+        "department": [
+          "cardiology"
+        ],
+        "shift_start": [
+          "00:00"
+        ],
+        "shift_end": [
+          "23:59"
+        ]
+      },
+      "id": "aaaaaaaa-0000-0000-0000-000000000001"
+    },
+    {
+      "username": "nurse1",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "nurse1@hms.example.com",
+      "firstName": "Nurse1",
+      "lastName": "Dev",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "nurse1",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "nurse"
+      ],
+      "attributes": {
+        "department": [
+          "cardiology"
+        ],
+        "shift_start": [
+          "00:00"
+        ],
+        "shift_end": [
+          "23:59"
+        ]
+      },
+      "id": "aaaaaaaa-0000-0000-0000-000000000002"
+    },
+    {
+      "username": "reception1",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "reception1@hms.example.com",
+      "firstName": "Reception1",
+      "lastName": "Dev",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "reception1",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "receptionist"
+      ],
+      "attributes": {
+        "department": [
+          "front-desk"
+        ],
+        "shift_start": [
+          "00:00"
+        ],
+        "shift_end": [
+          "23:59"
+        ]
+      }
+    },
+    {
+      "username": "billing1",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "billing1@hms.example.com",
+      "firstName": "Billing1",
+      "lastName": "Dev",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "billing1",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "billing_clerk"
+      ],
+      "attributes": {
+        "department": [
+          "billing"
+        ],
+        "shift_start": [
+          "00:00"
+        ],
+        "shift_end": [
+          "23:59"
+        ]
+      }
+    },
+    {
+      "username": "pharmacist1",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "pharmacist1@hms.example.com",
+      "firstName": "Pharmacist1",
+      "lastName": "Dev",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "pharmacist1",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "pharmacist"
+      ],
+      "attributes": {
+        "department": [
+          "pharmacy"
+        ],
+        "shift_start": [
+          "00:00"
+        ],
+        "shift_end": [
+          "23:59"
+        ]
+      }
+    },
+    {
+      "username": "patient1",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "patient1@hms.example.com",
+      "firstName": "Patient1",
+      "lastName": "Dev",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "patient1",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "patient"
+      ],
+      "attributes": {
+        "department": [
+          "none"
+        ],
+        "shift_start": [
+          "00:00"
+        ],
+        "shift_end": [
+          "23:59"
+        ]
+      },
+      "id": "bbbbbbbb-0000-0000-0000-000000000001"
+    }
+  ]
+}

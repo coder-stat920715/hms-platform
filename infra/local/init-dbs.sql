@@ -1,0 +1,6 @@
+CREATE DATABASE iam;
+CREATE DATABASE patient;
+CREATE DATABASE appointment;
+CREATE DATABASE billing;
+CREATE DATABASE pharmacy;
+CREATE DATABASE notification;

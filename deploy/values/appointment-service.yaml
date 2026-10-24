@@ -1,0 +1,20 @@
+# deploy/values/appointment-service.yaml
+image: { repository: 123456789012.dkr.ecr.eu-west-1.amazonaws.com/hms/appointment-service }
+env:
+  SPRING_PROFILES_ACTIVE: prod,msk-iam
+  SPRING_DATASOURCE_URL: jdbc:postgresql://hms-appointment.cluster-xyz.eu-west-1.rds.amazonaws.com:5432/appointment?sslmode=verify-full
+  SPRING_KAFKA_BOOTSTRAP_SERVERS: b-1.hms.kafka.eu-west-1.amazonaws.com:9098
+  SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://auth.hms.example.com/realms/hms
+  SPRING_DATA_MONGODB_URI: mongodb://docdb.cluster-xyz.eu-west-1.docdb.amazonaws.com:27017/hms_read?tls=true&retryWrites=false
+externalSecret:
+  keys:
+    - { secretKey: SPRING_DATASOURCE_USERNAME, remoteRef: hms/appointment/db, property: username }
+    - { secretKey: SPRING_DATASOURCE_PASSWORD, remoteRef: hms/appointment/db, property: password }
+    - { secretKey: SPRING_DATA_MONGODB_PASSWORD, remoteRef: hms/docdb, property: password }
+serviceAccount:
+  roleArn: arn:aws:iam::123456789012:role/hms-appointment-service   # IRSA: kafka-cluster:* on the topics this service uses
+targetGroup:
+  arn: arn:aws:elasticloadbalancing:eu-west-1:123456789012:targetgroup/hms-appointment/abc123
+network:
+  allowFrom: [api-gateway]
+  egressToDataCidrs: [10.20.20.0/22]

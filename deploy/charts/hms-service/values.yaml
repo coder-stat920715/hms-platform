@@ -1,0 +1,30 @@
+image:
+  repository: ""            # ECR repo
+  tag: ""                   # set by CI (immutable digest preferred)
+replicaCount: 3
+port: 8080
+serviceAccount:
+  create: true
+  roleArn: ""               # IRSA role, optional
+env: {}                     # plain env vars
+externalSecret:
+  enabled: true
+  secretStore: aws-secrets-manager
+  keys: []                  # [{ secretKey: DB_PASSWORD, remoteRef: hms/patient/db, property: password }]
+resources:
+  requests: { cpu: 500m, memory: 768Mi }
+  limits:   { memory: 1Gi }
+jvm:
+  opts: "-XX:MaxRAMPercentage=70 -XX:+UseZGC -XX:+ZGenerational -Djava.security.egd=file:/dev/urandom"
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 10
+  cpuTarget: 65
+pdb:
+  minAvailable: 2
+targetGroup:
+  arn: ""                   # Part 3 target group ARN; empty = no TargetGroupBinding
+network:
+  allowFrom: []             # list of app names allowed to call this service
+  egressToDataCidrs: []     # e.g. data subnet CIDRs

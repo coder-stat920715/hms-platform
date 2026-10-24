@@ -1,0 +1,22 @@
+# deploy/values/api-gateway.yaml
+image: { repository: 123456789012.dkr.ecr.eu-west-1.amazonaws.com/hms/api-gateway }
+resources:
+  requests: { cpu: "1", memory: 1Gi }
+  limits:   { memory: 1536Mi }
+env:
+  SPRING_DATA_REDIS_HOST: hms-redis.xyz.cache.amazonaws.com
+  REDIS_SSL: "true"
+  JWT_ISSUER_URI: https://auth.hms.example.com/realms/hms
+  # Services are reached through their Kubernetes Service names (port 80); no discovery client needed.
+  PATIENT_URL: http://patient-service
+  APPOINTMENT_URL: http://appointment-service
+  BILLING_URL: http://billing-service
+  PHARMACY_URL: http://pharmacy-inventory-service
+  IAM_URL: http://iam-auth-service
+externalSecret:
+  keys:
+    - { secretKey: REDIS_PASSWORD, remoteRef: hms/redis, property: password }
+targetGroup:
+  arn: arn:aws:elasticloadbalancing:eu-west-1:123456789012:targetgroup/hms-gateway/def456   # external ALB target group
+network:
+  egressToDataCidrs: [10.20.20.0/22]

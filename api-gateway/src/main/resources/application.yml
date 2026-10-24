@@ -1,0 +1,82 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${JWT_ISSUER_URI:http://localhost:8180/realms/hms}
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      ssl:
+        enabled: ${REDIS_SSL:false}
+  cloud:
+    gateway:
+      default-filters:
+        - name: RequestRateLimiter
+          args:
+            key-resolver: "#{@userKeyResolver}"
+            redis-rate-limiter.replenishRate: 50
+            redis-rate-limiter.burstCapacity: 100
+            redis-rate-limiter.requestedTokens: 1
+        - RemoveRequestHeader=Cookie
+        - AddResponseHeader=Cache-Control, no-store
+      routes:
+        - id: patient
+          uri: ${PATIENT_URL:http://localhost:8082}
+          predicates: [ "Path=/api/patients/**" ]
+          filters:
+            - name: CircuitBreaker
+              args: { name: patientCb, fallbackUri: "forward:/fallback/patient" }
+        - id: appointment
+          uri: ${APPOINTMENT_URL:http://localhost:8083}
+          predicates: [ "Path=/api/appointments/**" ]
+          filters:
+            - name: CircuitBreaker
+              args: { name: appointmentCb, fallbackUri: "forward:/fallback/appointment" }
+        - id: billing
+          uri: ${BILLING_URL:http://localhost:8084}
+          predicates: [ "Path=/api/invoices/**" ]
+          filters:
+            - name: CircuitBreaker
+              args: { name: billingCb, fallbackUri: "forward:/fallback/billing" }
+        - id: pharmacy
+          uri: ${PHARMACY_URL:http://localhost:8085}
+          predicates: [ "Path=/api/pharmacy/**" ]
+          filters:
+            - name: CircuitBreaker
+              args: { name: pharmacyCb, fallbackUri: "forward:/fallback/pharmacy" }
+        - id: iam
+          uri: ${IAM_URL:http://localhost:8081}
+          predicates: [ "Path=/api/iam/**" ]
+
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        sliding-window-type: COUNT_BASED
+        sliding-window-size: 20
+        minimum-number-of-calls: 10
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 20s
+        permitted-number-of-calls-in-half-open-state: 5
+  timelimiter:
+    configs:
+      default:
+        timeout-duration: 5s
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true

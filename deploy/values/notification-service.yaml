@@ -1,0 +1,20 @@
+# deploy/values/notification-service.yaml
+image: { repository: 123456789012.dkr.ecr.eu-west-1.amazonaws.com/hms/notification-service }
+env:
+  SPRING_PROFILES_ACTIVE: prod,msk-iam
+  SPRING_DATASOURCE_URL: jdbc:postgresql://hms-notification.cluster-xyz.eu-west-1.rds.amazonaws.com:5432/notification?sslmode=verify-full
+  SPRING_KAFKA_BOOTSTRAP_SERVERS: b-1.hms.kafka.eu-west-1.amazonaws.com:9098
+  SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://auth.hms.example.com/realms/hms
+  NOTIFICATION_MODE: aws
+  AWS_REGION: eu-west-1
+externalSecret:
+  keys:
+    - { secretKey: SPRING_DATASOURCE_USERNAME, remoteRef: hms/notification/db, property: username }
+    - { secretKey: SPRING_DATASOURCE_PASSWORD, remoteRef: hms/notification/db, property: password }
+serviceAccount:
+  roleArn: arn:aws:iam::123456789012:role/hms-notification
+network:
+  allowFrom: []
+  egressToDataCidrs: [10.20.20.0/22]
+autoscaling: { minReplicas: 2, maxReplicas: 6 }
+pdb: { minAvailable: 1 }

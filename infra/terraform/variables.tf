@@ -1,0 +1,9 @@
+variable "region"         { default = "eu-west-1" }
+variable "domain"         { default = "hms.example.com" }
+variable "api_domain"     { default = "api.hms.example.com" }
+variable "origin_domain"  { default = "origin.api.hms.example.com" } # CloudFront origin (Route 53 routed)
+variable "vpc_cidr"       { default = "10.20.0.0/16" }
+variable "azs"            { default = ["eu-west-1a", "eu-west-1b", "eu-west-1c"] }
+variable "blocked_countries" { default = ["KP", "IR", "SY"] }          # adjust to policy
+variable "origin_secret"  { sensitive = true }                        # random 32+ chars, shared CF -> ALB
+variable "enable_shield_advanced" { default = false }                 # needs an active subscription (~$3k/mo)

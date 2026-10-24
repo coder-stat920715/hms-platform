@@ -1,0 +1,36 @@
+{
+  "name": "__NAME__-outbox",
+  "config": {
+    "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+    "tasks.max": "1",
+    "database.hostname": "postgres",
+    "database.port": "5432",
+    "database.user": "hms",
+    "database.password": "hms",
+    "database.dbname": "__DB__",
+    "topic.prefix": "__DB__-db",
+    "plugin.name": "pgoutput",
+    "publication.name": "dbz_outbox",
+    "publication.autocreate.mode": "disabled",
+    "slot.name": "__DB___outbox_slot",
+    "table.include.list": "public.outbox",
+    "tombstones.on.delete": "false",
+    "heartbeat.interval.ms": "10000",
+
+    "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "value.converter.schemas.enable": "false",
+
+    "transforms": "outbox",
+    "transforms.outbox.type": "io.debezium.transforms.outbox.EventRouter",
+    "transforms.outbox.table.field.event.id": "id",
+    "transforms.outbox.table.field.event.key": "aggregateid",
+    "transforms.outbox.table.field.event.type": "type",
+    "transforms.outbox.table.field.event.payload": "payload",
+    "transforms.outbox.table.field.event.timestamp": "created_at",
+    "transforms.outbox.route.by.field": "aggregatetype",
+    "transforms.outbox.route.topic.replacement": "hms.${routedByValue}.events",
+    "transforms.outbox.table.expand.json.payload": "true",
+    "transforms.outbox.table.fields.additional.placement": "type:header:eventType,id:header:messageId"
+  }
+}

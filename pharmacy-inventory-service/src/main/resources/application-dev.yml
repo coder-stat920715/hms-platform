@@ -1,0 +1,4 @@
+# Activate with SPRING_PROFILES_ACTIVE=dev to load seed drugs
+spring:
+  flyway:
+    locations: classpath:db/migration,classpath:db/dev

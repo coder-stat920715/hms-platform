@@ -1,0 +1,46 @@
+server:
+  port: 8085
+  forward-headers-strategy: native
+
+spring:
+  application:
+    name: pharmacy-inventory-service
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/pharmacy}
+    username: ${DB_USER:hms}
+    password: ${DB_PASSWORD:hms}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: true
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${JWT_ISSUER_URI:http://localhost:8180/realms/hms}
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+    consumer:
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+
+hms:
+  pharmacy:
+    low-stock-scan-ms: 300000
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true

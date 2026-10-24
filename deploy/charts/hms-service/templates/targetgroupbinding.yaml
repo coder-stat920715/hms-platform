@@ -1,0 +1,9 @@
+{{- if .Values.targetGroup.arn }}
+apiVersion: elbv2.k8s.aws/v1beta1
+kind: TargetGroupBinding
+metadata: { name: {{ .Release.Name }} }
+spec:
+  serviceRef: { name: {{ .Release.Name }}, port: 80 }
+  targetGroupARN: {{ .Values.targetGroup.arn }}
+  targetType: ip
+{{- end }}

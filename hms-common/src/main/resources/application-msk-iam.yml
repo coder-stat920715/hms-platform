@@ -1,0 +1,9 @@
+# Activate with SPRING_PROFILES_ACTIVE=...,msk-iam to talk to Amazon MSK with IAM authentication (port 9098).
+# The pod's IRSA role needs kafka-cluster:* permissions on the topics/groups it uses (see docs/05).
+spring:
+  kafka:
+    properties:
+      security.protocol: SASL_SSL
+      sasl.mechanism: AWS_MSK_IAM
+      sasl.jaas.config: software.amazon.msk.auth.iam.IAMLoginModule required;
+      sasl.client.callback.handler.class: software.amazon.msk.auth.iam.IAMClientCallbackHandler
